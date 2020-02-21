@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="jogogourmet:jar">
+    <output-path>$PROJECT_DIR$/../gourmet-game-play</output-path>
+    <root id="archive" name="jogogourmet.jar">
+      <element id="module-output" name="jogogourmet" />
+    </root>
+  </artifact>
+</component>
