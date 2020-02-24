@@ -1,69 +1,52 @@
 package controller;
 
+import domain.ActionAnswer;
 import domain.Node;
 
-import javax.swing.*;
+import static domain.ActionAnswer.*;
 
-public class GameController implements GameControllerInterface {
+public class GameController {
 
-    public static final int YES = 0;
-    private static Node root;
+    private Node root;
+    private AskController askController;
 
     public GameController() {
-        this.init();
+        this.createRoot();
+        this.askController = new AskController();
     }
 
-    @Override
-    public void init() {
-        if (this.root == null) {
-            this.root = new Node(
-                    "massa",
-                    new Node("Bolo de chocolate"),
-                    new Node("Lasanha")
-            );
-        }
+
+    public void createRoot() {
+        this.root = new Node(
+                "massa",
+                new Node("Bolo de chocolate"),
+                new Node("Lasanha")
+        );
     }
 
-    @Override
+
     public void play() {
-        boolean exitControl = true;
-        int notExit;
-        Object[] option = {"OK"};
+
+        ActionAnswer exitControl;
 
         do {
-            notExit = JOptionPane.showOptionDialog(
-                        null,
-                        "Pense em um prato que gosta",
-                        "JogoGourmet",
-                        JOptionPane.OK_OPTION,
-                        JOptionPane.PLAIN_MESSAGE,
-                        null,
-                        option,
-                        option[0]
-                    );
-            if (notExit == JOptionPane.CLOSED_OPTION) {
-                exitControl = false;
-            } else {
+            exitControl = askController.showGameStartMessage();
+            if (isNotClosed(exitControl)) {
                 exitControl = askQuestion(root);
             }
-        } while (exitControl);
+        } while (isNotClosed(exitControl));
     }
 
-    @Override
+    private boolean isNotClosed(ActionAnswer answer) {
+        return answer != CLOSED;
+    }
+
     public void insert(Node element) {
 
         String tmp = element.getValue();
 
-        String food = JOptionPane.showInputDialog(
-                null, "Qual prato você pensou?",
-                "Desisto",
-                JOptionPane.QUESTION_MESSAGE
-        );
-        String toQuestion = JOptionPane.showInputDialog(
-                String.format("%s é ______, mas %s não.",
-                        food,
-                        tmp)
-        );
+        String food = askController.getFoodMessage();
+        String toQuestion = askController.getDescriptionMessage(tmp, food);
 
         element.setValue(toQuestion);
         element.setRight(new Node(food));
@@ -71,49 +54,31 @@ public class GameController implements GameControllerInterface {
 
     }
 
-    @Override
-    public boolean askQuestion(Node element) {
+    public ActionAnswer askQuestion(Node element) {
 
-        Object[] options = { "SIM", "NÃO" };
-         int awnser = JOptionPane.showOptionDialog(
-                null,
-                String.format("O prato que você pensou é %s ?", element.getValue()),
-                "Confirm",
-                JOptionPane.DEFAULT_OPTION,
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                options,
-                options[0]
-        );
+        ActionAnswer answer = askController.showQuestionCorrectAnswer(element);
 
-        if (awnser == JOptionPane.CLOSED_OPTION) {
-            return false;
+        return checkAnswer(element, answer);
+    }
+
+    private ActionAnswer checkAnswer(Node element, ActionAnswer answer) {
+        if (answer == CLOSED) {
+            return CLOSED;
         }
 
-        if (awnser == YES) {
-            if (element.getRight() == null) {
-                JOptionPane.showMessageDialog(null, "Acertei de novo!");
-            } else {
+        if (answer == YES) {
+            if (element.hasRight()) {
                 return askQuestion(element.getRight());
             }
-        } else {
-            if (element.getLeft() == null) {
-                insert(element);
-            } else {
-                return askQuestion(element.getLeft());
-            }
+            askController.showSuccessMessage();
         }
 
-        return true;
-    }
-
-    @Override
-    public Node getRoot() {
-        return this.root;
-    }
-
-    @Override
-    public void setRoot(Node element) {
-        this.root = element;
+        if (answer == NO) {
+            if (element.hasLeft()) {
+                return askQuestion(element.getLeft());
+            }
+            insert(element);
+        }
+        return CONTINUE;
     }
 }

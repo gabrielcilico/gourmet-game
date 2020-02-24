@@ -24,12 +24,20 @@ public class Node {
         this.value = value;
     }
 
+    public boolean hasLeft() {
+        return left != null;
+    }
+
     public Node getLeft() {
         return left;
     }
 
     public void setLeft(Node left) {
         this.left = left;
+    }
+
+    public boolean hasRight() {
+        return right != null;
     }
 
     public Node getRight() {
